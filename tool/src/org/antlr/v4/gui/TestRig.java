@@ -6,6 +6,8 @@
 
 package org.antlr.v4.gui;
 
+import org.antlr.v4.runtime.atn.DecisionInfo;
+import org.antlr.v4.runtime.atn.DecisionState;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonToken;
@@ -20,10 +22,13 @@ import org.antlr.v4.runtime.atn.PredictionMode;
 
 import javax.print.PrintException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +41,7 @@ import java.util.List;
  *        [-tokens] [-gui] [-ps file.ps]
  *        [-trace]
  *        [-diagnostics]
+ *        [-profile file.csv]
  *        [-SLL]
  *        [input-filename(s)]
  */
@@ -53,12 +59,13 @@ public class TestRig {
 	protected boolean diagnostics = false;
 	protected String encoding = null;
 	protected boolean SLL = false;
+	protected String profileFile = null;
 
 	public TestRig(String[] args) throws Exception {
 		if ( args.length < 2 ) {
 			System.err.println("java org.antlr.v4.gui.TestRig GrammarName startRuleName\n" +
 							   "  [-tokens] [-tree] [-gui] [-ps file.ps] [-encoding encodingname]\n" +
-							   "  [-trace] [-diagnostics] [-SLL]\n"+
+							   "  [-trace] [-diagnostics] [-profile file.csv] [-SLL]\n"+
 							   "  [input-filename(s)]");
 			System.err.println("Use startRuleName='tokens' if GrammarName is a lexer grammar.");
 			System.err.println("Omitting input-filename makes rig read from stdin.");
@@ -108,6 +115,14 @@ public class TestRig {
 					return;
 				}
 				psFile = args[i];
+				i++;
+			}
+			else if ( arg.equals("-profile") ) {
+				if ( i>=args.length ) {
+					System.err.println("missing filename on -profile");
+					return;
+				}
+				profileFile = args[i];
 				i++;
 			}
 		}
@@ -195,6 +210,10 @@ public class TestRig {
 				parser.setBuildParseTree(true);
 			}
 
+			if (profileFile!=null) {
+				parser.setProfile(true);
+			}
+
 			if ( SLL ) { // overrides diagnostics
 				parser.getInterpreter().setPredictionMode(PredictionMode.SLL);
 			}
@@ -214,6 +233,30 @@ public class TestRig {
 				}
 				if ( psFile!=null ) {
 					Trees.save(tree, parser, psFile); // Generate postscript
+				}
+				if (profileFile!=null) {
+					float ns_per_sec = 1_000_000_000.0;
+					try (PrintWriter out = new PrintWriter(Files.newOutputStream(Path.of(profileFile)))) {
+						out.println("\"decision\",\"rule\",\"ambiguities\",\"contextSensitivities\",\"errors\",\"invocations\","
+							+ "\"LL_ATNTransitions\",\"LL_DFATransitions\",\"LL_Fallback\",\"LL_MaxLook\",\"LL_MinLook\","
+							+ "\"LL_TotalLook\",\"predicateEvals\",\"SLL_ATNTransitions\",\"SLL_DFATransitions\","
+							+ "\"SLL_MaxLook\",\"SLL_MinLook\",\"SLL_TotalLook\",\"timeInPrediction\""
+							);
+						for (DecisionInfo decisionInfo: parser.getParseInfo().getDecisionInfo()) {
+							DecisionState ds = parser.getATN().getDecisionState(decisionInfo.decision);
+							String rule = parser.getRuleNames()[ds.ruleIndex];
+							out.println(String.format("%d,\"%s\",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%.9f",
+								decisionInfo.decision, rule.replace("\"", "\"\""),
+								decisionInfo.ambiguities.size(), decisionInfo.contextSensitivities.size(),
+								decisionInfo.errors.size(), decisionInfo.invocations, decisionInfo.LL_ATNTransitions,
+								decisionInfo.LL_DFATransitions, decisionInfo.LL_Fallback, decisionInfo.LL_MaxLook,
+								decisionInfo.LL_MinLook, decisionInfo.LL_TotalLook, decisionInfo.predicateEvals.size(),
+								decisionInfo.SLL_ATNTransitions, decisionInfo.SLL_DFATransitions, decisionInfo.SLL_MaxLook,
+								decisionInfo.SLL_MinLook, decisionInfo.SLL_TotalLook,
+								(float) decisionInfo.timeInPrediction / ns_per_sec
+								));
+						}
+					}
 				}
 			}
 			catch (NoSuchMethodException nsme) {
