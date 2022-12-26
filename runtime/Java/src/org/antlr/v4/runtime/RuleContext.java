@@ -191,9 +191,26 @@ public class RuleContext implements RuleNode {
 
 	/** Print out a whole tree, not just a node, in LISP format
 	 *  (root child1 .. childN). Print just a node if this is a leaf.
+	 *  Print the tree on multiple lines with indentation if pretty=true.
+	 *  We have to know the recognizer so we can get rule names.
+	 */
+	public String toStringTree(Parser recog, boolean pretty) {
+		return Trees.toStringTree(this, recog, pretty);
+	}
+
+	/** Print out a whole tree, not just a node, in LISP format
+	 *  (root child1 .. childN). Print just a node if this is a leaf.
 	 */
 	public String toStringTree(List<String> ruleNames) {
 		return Trees.toStringTree(this, ruleNames);
+	}
+
+	/** Print out a whole tree, not just a node, in LISP format
+	 *  (root child1 .. childN). Print just a node if this is a leaf.
+	 *  Print the tree on multiple lines with indentation if pretty=true.
+	 */
+	public String toStringTree(List<String> ruleNames, boolean pretty) {
+		return Trees.toStringTree(this, ruleNames, pretty);
 	}
 
 	@Override

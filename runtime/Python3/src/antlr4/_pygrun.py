@@ -8,22 +8,6 @@ from antlr4 import *
 
 
 # this is a python version of TestRig
-def beautify_lisp_string(in_string):
-    indent_size = 3
-    add_indent = ' '*indent_size
-    out_string = in_string[0]  # no indent for 1st (
-    indent = ''
-    for i in range(1, len(in_string)):
-        if in_string[i] == '(' and in_string[i+1] != ' ':
-            indent += add_indent
-            out_string += "\n" + indent + '('
-        elif in_string[i] == ')':
-            out_string += ')'
-            if len(indent) > 0:
-                indent = indent.replace(add_indent, '', 1)
-        else:
-            out_string += in_string[i]
-    return out_string
 
 
 def main():
@@ -43,6 +27,11 @@ def main():
                       default=False,
                       action='store_true',
                       help='Print AST tree'
+                      )
+    parser.add_option('-p', '--treepp',
+                      default=False,
+                      action='store_true',
+                      help='Pretty-print AST tree'
                       )
     parser.add_option('-k', '--tokens',
                       dest="token",
@@ -142,9 +131,9 @@ def main():
         if hasattr(parser, start_rule):
             func_start_rule = getattr(parser, start_rule)
             parser_ret = func_start_rule()
-            if options.tree:
-                lisp_tree_str = parser_ret.toStringTree(recog=parser)
-                print(beautify_lisp_string(lisp_tree_str))
+            if options.tree or options.treepp:
+                lisp_tree_str = parser_ret.toStringTree(recog=parser, pretty=options.treepp)
+                print(lisp_tree_str)
         else:
             print("[ERROR] Can't find start rule '{}' in parser '{}'".format(start_rule, parserName))
 

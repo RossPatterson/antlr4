@@ -33,6 +33,7 @@ import java.util.List;
  *
  *  $ java org.antlr.v4.runtime.misc.TestRig GrammarName startRuleName
  *        [-tree]
+ *        [-treepp]
  *        [-tokens] [-gui] [-ps file.ps]
  *        [-trace]
  *        [-diagnostics]
@@ -46,6 +47,7 @@ public class TestRig {
 	protected String startRuleName;
 	protected final List<String> inputFiles = new ArrayList<String>();
 	protected boolean printTree = false;
+	protected boolean prettyPrintTree = false;
 	protected boolean gui = false;
 	protected String psFile = null;
 	protected boolean showTokens = false;
@@ -57,7 +59,7 @@ public class TestRig {
 	public TestRig(String[] args) throws Exception {
 		if ( args.length < 2 ) {
 			System.err.println("java org.antlr.v4.gui.TestRig GrammarName startRuleName\n" +
-							   "  [-tokens] [-tree] [-gui] [-ps file.ps] [-encoding encodingname]\n" +
+							   "  [-tokens] [-tree] [-treepp] [-gui] [-ps file.ps] [-encoding encodingname]\n" +
 							   "  [-trace] [-diagnostics] [-SLL]\n"+
 							   "  [input-filename(s)]");
 			System.err.println("Use startRuleName='tokens' if GrammarName is a lexer grammar.");
@@ -78,6 +80,10 @@ public class TestRig {
 			}
 			if ( arg.equals("-tree") ) {
 				printTree = true;
+			}
+			if ( arg.equals("-treepp") ) {
+				printTree = true;
+				prettyPrintTree = true;
 			}
 			if ( arg.equals("-gui") ) {
 				gui = true;
@@ -207,7 +213,7 @@ public class TestRig {
 				ParserRuleContext tree = (ParserRuleContext)startRule.invoke(parser, (Object[])null);
 
 				if ( printTree ) {
-					System.out.println(tree.toStringTree(parser));
+					System.out.println(tree.toStringTree(parser, prettyPrintTree));
 				}
 				if ( gui ) {
 					Trees.inspect(tree, parser);

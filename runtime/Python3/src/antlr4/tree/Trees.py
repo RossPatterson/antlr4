@@ -16,24 +16,27 @@ Parser  = None
 
 class Trees(object):
 
-     # Print out a whole tree in LISP form. {@link #getNodeText} is used on the
+    # Print out a whole tree in LISP form. {@link #getNodeText} is used on the
     #  node payloads to get the text for the nodes.  Detect
     #  parse trees and extract data appropriately.
     @classmethod
-    def toStringTree(cls, t:Tree, ruleNames:list=None, recog:Parser=None):
+    def toStringTree(cls, t:Tree, ruleNames:list=None, recog:Parser=None, pretty:bool=True, indent_size:int=4, indent_level:int=0):
         if recog is not None:
             ruleNames = recog.ruleNames
         s = escapeWhitespace(cls.getNodeText(t, ruleNames), False)
         if t.getChildCount()==0:
             return s
         with StringIO() as buf:
+            if pretty:
+                buf.write('\n')
+                buf.write(' '*(indent_size*indent_level));
             buf.write("(")
             buf.write(s)
             buf.write(' ')
             for i in range(0, t.getChildCount()):
                 if i > 0:
                     buf.write(' ')
-                buf.write(cls.toStringTree(t.getChild(i), ruleNames))
+                buf.write(cls.toStringTree(t.getChild(i), ruleNames, pretty=pretty, indent_level=indent_level+1))
             buf.write(")")
             return buf.getvalue()
 

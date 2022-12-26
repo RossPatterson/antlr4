@@ -24,38 +24,87 @@ import java.util.List;
 
 /** A set of utility routines useful for all kinds of ANTLR trees. */
 public class Trees {
-	/** Print out a whole tree in LISP form. {@link #getNodeText} is used on the
+	/** Print out a whole tree in LISP form in a single line.
+	 *  {@link #getNodeText} is used on the
 	 *  node payloads to get the text for the nodes.  Detect
 	 *  parse trees and extract data appropriately.
 	 */
 	public static String toStringTree(Tree t) {
-		return toStringTree(t, (List<String>)null);
+		return toStringTree(t, false);
 	}
 
-	/** Print out a whole tree in LISP form. {@link #getNodeText} is used on the
+	/** Print out a whole tree in LISP form, in a single line,
+	 *  or in multiple lines with indentation if pretty=true.
+	 *  {@link #getNodeText} is used on the
+	 *  node payloads to get the text for the nodes.  Detect
+	 *  parse trees and extract data appropriately.
+	 *  Print the tree
+	 */
+	public static String toStringTree(Tree t, boolean pretty) {
+		return toStringTree(t, (List<String>)null, pretty);
+	}
+
+	/** Print out a whole tree in LISP form in a single line.
+	 *  {@link #getNodeText} is used on the
 	 *  node payloads to get the text for the nodes.  Detect
 	 *  parse trees and extract data appropriately.
 	 */
 	public static String toStringTree(Tree t, Parser recog) {
-		String[] ruleNames = recog != null ? recog.getRuleNames() : null;
-		List<String> ruleNamesList = ruleNames != null ? Arrays.asList(ruleNames) : null;
-		return toStringTree(t, ruleNamesList);
+		return toStringTree(t, recog, false);
 	}
 
-	/** Print out a whole tree in LISP form. {@link #getNodeText} is used on the
+	/** Print out a whole tree in LISP form, in a single line,
+	 *  or in multiple lines with indentation if pretty=true.
+	 *  {@link #getNodeText} is used on the
+	 *  node payloads to get the text for the nodes.  Detect
+	 *  parse trees and extract data appropriately.
+	 */
+	public static String toStringTree(Tree t, Parser recog, boolean pretty) {
+		String[] ruleNames = recog != null ? recog.getRuleNames() : null;
+		List<String> ruleNamesList = ruleNames != null ? Arrays.asList(ruleNames) : null;
+		return toStringTree(t, ruleNamesList, pretty);
+	}
+
+	/** Print out a whole tree in LISP form in a single line.
+	 *  {@link #getNodeText} is used on the
 	 *  node payloads to get the text for the nodes.
 	 */
-	public static String toStringTree(final Tree t, final List<String> ruleNames) {
+	public static String toStringTree(Tree t, List<String> ruleNames) {
+		return toStringTree(t, ruleNames, false);
+	}
+
+	/** Print out a whole tree in LISP form, in a single line,
+	 *  or in multiple lines with indentation if pretty=true.
+	 *  {@link #getNodeText} is used on the
+	 *  node payloads to get the text for the nodes.
+	 */
+	public static String toStringTree(Tree t, List<String> ruleNames, boolean pretty) {
+		return toStringTree(t, ruleNames, pretty, 0);
+	}
+
+	/** Print out a whole tree in LISP form, in a single line,
+	 *  or in multiple lines with indentation if pretty=true.
+	 *  {@link #getNodeText} is used on the
+	 *  node payloads to get the text for the nodes.
+	 */
+	private static String toStringTree(final Tree t, final List<String> ruleNames, boolean pretty, int indent) {
 		String s = Utils.escapeWhitespace(getNodeText(t, ruleNames), false);
 		if ( t.getChildCount()==0 ) return s;
 		StringBuilder buf = new StringBuilder();
+		if (pretty) {
+			buf.append(System.lineSeparator());
+			// buf.append(String.Repeat("    ", indent));
+			for (int j = 0; j<indent; j++) {
+				buf.append("    ");
+			}
+		}
 		buf.append("(");
 		s = Utils.escapeWhitespace(getNodeText(t, ruleNames), false);
 		buf.append(s);
 		buf.append(' ');
 		for (int i = 0; i<t.getChildCount(); i++) {
 			if ( i>0 ) buf.append(' ');
-			buf.append(toStringTree(t.getChild(i), ruleNames));
+			buf.append(toStringTree(t.getChild(i), ruleNames, pretty, indent+1));
 		}
 		buf.append(")");
 		return buf.toString();
