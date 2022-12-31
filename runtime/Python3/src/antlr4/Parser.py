@@ -21,6 +21,8 @@ from antlr4.atn.ATNDeserializationOptions import ATNDeserializationOptions
 from antlr4.error.Errors import UnsupportedOperationException, RecognitionException
 from antlr4.tree.ParseTreePatternMatcher import ParseTreePatternMatcher
 from antlr4.tree.Tree import ParseTreeListener, TerminalNode, ErrorNode
+from antlr4.atn.ParserATNSimulator import ParserATNSimulator
+from antlr4.atn.ProfilingATNSimulator import ProfilingATNSimulator
 
 class TraceListener(ParseTreeListener):
     __slots__ = '_parser'
@@ -578,3 +580,12 @@ class Parser (Recognizer):
                 self.removeParseListener(self._tracer)
             self._tracer = TraceListener(self)
             self.addParseListener(self._tracer)
+
+    def setProfile(self, profile:bool):
+        saveMode = self._interp.predictionMode
+        if profile:
+            if self._interp is not ProfilingATNSimulator:
+                self._interp = ProfilingATNSimulator(self)
+        elif _interp is ProfilingATNSimulator:
+            self._interp =  ParserATNSimulator(self, getATN(), self._interp.decisionToDFA, self._interp.sharedContextCache)
+        self._interp.predictionMode = saveMode

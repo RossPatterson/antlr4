@@ -11,6 +11,7 @@ from antlr4.atn.ATN import ATN
 from antlr4.atn.ATNDeserializer import ATNDeserializer
 from antlr4.atn.LexerATNSimulator import LexerATNSimulator
 from antlr4.atn.ParserATNSimulator import ParserATNSimulator
+from antlr4.atn.ProfilingATNSimulator import ProfilingATNSimulator
 from antlr4.atn.PredictionMode import PredictionMode
 from antlr4.PredictionContext import PredictionContextCache
 from antlr4.ParserRuleContext import RuleContext, ParserRuleContext

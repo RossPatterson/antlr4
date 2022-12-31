@@ -232,11 +232,13 @@
 # the input.</p>
 #
 import sys
-from antlr4 import DFA
+from typing import TYPE_CHECKING
+from antlr4.dfa import DFA
 from antlr4.PredictionContext import PredictionContextCache, PredictionContext, SingletonPredictionContext, \
     PredictionContextFromRuleContext
 from antlr4.BufferedTokenStream import TokenStream
-from antlr4.Parser import Parser
+if TYPE_CHECKING:
+    from antlr4.Parser import Parser
 from antlr4.ParserRuleContext import ParserRuleContext
 from antlr4.RuleContext import RuleContext
 from antlr4.Token import Token
@@ -266,7 +268,7 @@ class ParserATNSimulator(ATNSimulator):
     retry_debug = False
 
 
-    def __init__(self, parser:Parser, atn:ATN, decisionToDFA:list, sharedContextCache:PredictionContextCache):
+    def __init__(self, parser:"Parser", atn:ATN, decisionToDFA:list, sharedContextCache:PredictionContextCache):
         super().__init__(atn, sharedContextCache)
         self.parser = parser
         self.decisionToDFA = decisionToDFA

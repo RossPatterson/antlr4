@@ -68,6 +68,11 @@ def main():
                       action='store_true',
                       help='Enable Trace'
                       )
+    parser.add_option('-P', '--profile',
+                      dest="profile_csvfile",
+                      default="",
+                      help='set profile csv file name',
+                      )
 
     options, remainder = parser.parse_args()
     if len(remainder) < 2:
@@ -137,6 +142,8 @@ def main():
             parser.buildParseTrees = True
         if options.sll:
             parser._interp.predictionMode = PredictionMode.SLL
+        if options.profile_csvfile != "":
+            parser.setProfile(True)
         #parser.setTokenStream(token_stream)
         parser.setTrace(options.trace)
         if hasattr(parser, start_rule):
@@ -145,6 +152,8 @@ def main():
             if options.tree:
                 lisp_tree_str = parser_ret.toStringTree(recog=parser)
                 print(beautify_lisp_string(lisp_tree_str))
+            if options.profile_csvfile != "":
+                write_profile_file(parser, options.profile_csvfile)
         else:
             print("[ERROR] Can't find start rule '{}' in parser '{}'".format(start_rule, parserName))
 
@@ -166,6 +175,19 @@ def main():
         else:
             print("[ERROR] file {} not exist".format(os.path.normpath(file_name)))
 
+
+def write_profile_file(parser, profile_filename):
+    ns_per_sec = 1000000000.0;
+    dquote = '"'
+    csv_file = open(profile_filename, "w")
+    try:
+        csv_file.write('"decision","rule","ambiguities","contextSensitivities","errors","invocations","LL_ATNTransitions","LL_DFATransitions","LL_Fallback","LL_MaxLook","LL_MinLook","LL_TotalLook","predicateEvals","SLL_ATNTransitions","SLL_DFATransitions","SLL_MaxLook","SLL_MinLook","SLL_TotalLook","timeInPrediction"\n')
+        for decisionInfo in parser._interp.decisions:
+            decision_state = parser._interp.atn.decisionToState[decisionInfo.decision]
+            rule_name = parser.ruleNames[decision_state.ruleIndex];
+            csv_file.write(f'{decisionInfo.decision},"{rule_name.replace(dquote,dquote+dquote)}",{len(decisionInfo.ambiguities)},{len(decisionInfo.contextSensitivities)},{len(decisionInfo.errors)},{decisionInfo.invocations},{decisionInfo.LL_ATNTransitions},{decisionInfo.LL_DFATransitions},{decisionInfo.LL_Fallback},{decisionInfo.LL_MaxLook},{decisionInfo.LL_MinLook},{decisionInfo.LL_TotalLook},{len(decisionInfo.predicateEvals)},{decisionInfo.SLL_ATNTransitions},{decisionInfo.SLL_DFATransitions},{decisionInfo.SLL_MaxLook},{decisionInfo.SLL_MinLook},{decisionInfo.SLL_TotalLook},{decisionInfo.timeInPrediction/ns_per_sec}\n')
+    finally:
+        csv_file.close()
 
 if __name__ == '__main__':
     main()
